@@ -337,9 +337,7 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
             if start_dt_utc > event_day_start_utc:
                 start_str_before = event_day_start_utc.strftime('%Y%m%d%H%M%S') + " +0000"
                 stop_str_before = start_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
-                
-                start_str_before = stop_str_before - timedelta(days=2)
-                
+
                 xml_lines.append(f'  <programme start="{start_str_before}" stop="{stop_str_before}" channel="{unique_id}">')
                 xml_lines.append(f'    <title lang="pt">Evento não iniciado</title>')
                 xml_lines.append(f'    <desc lang="pt">Aguardando o início do evento programado.</desc>')
@@ -358,8 +356,6 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
             if end_dt_utc < event_day_end_utc:
                 start_str_after = end_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
                 stop_str_after = event_day_end_utc.strftime('%Y%m%d%H%M%S') + " +0000"
-                
-                stop_str_after = stop_str_after + timedelta(days=3)
                 
                 xml_lines.append(f'  <programme start="{start_str_after}" stop="{stop_str_after}" channel="{unique_id}">')
                 xml_lines.append(f'    <title lang="pt">Evento finalizado</title>')
