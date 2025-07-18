@@ -27,23 +27,26 @@ EPG_PAST_EVENT_CUTOFF_HOURS = 1
 GITHUB_API_URL = "https://api.github.com/repos/tv-logo/tv-logos/contents/countries"
 
 # --- ALTERAÇÃO 1: Adicionada uma constante para o ícone padrão ---
-DEFAULT_SPORT_ICON = "https://github.com/tv-logo/tv-logos/blob/main/misc/vod/sports-vod.png?raw=true"
+DEFAULT_SPORT_ICON = "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/sports.png?raw=true"
 
 SPORT_ICON_MAP = {
-    "Futebol": "https://pngimg.com/uploads/football/football_PNG28463.png",
-    "Basquete": DEFAULT_SPORT_ICON,
-    "Futebol Americano": DEFAULT_SPORT_ICON,
-    "Tênis": "https://pngimg.com/uploads/tennis/tennis_PNG10405.png",
-    "Snooker": DEFAULT_SPORT_ICON,
-    "Automobilismo": DEFAULT_SPORT_ICON,
-    "Programas de TV": DEFAULT_SPORT_ICON, 
-    "Beisebol": DEFAULT_SPORT_ICON,    
-    "Cricket": DEFAULT_SPORT_ICON,
+    "Futebol": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/soccer.png?raw=true",
+    "Basquete": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/basketball.png?raw=true",
+    "Futebol Americano": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/americanfootball.png?raw=true",
+    "Tênis": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/tennis.png?raw=true",
+    "Sinuca": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/snooker.png?raw=true",
+    "Automobilismo": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/motorsport.png?raw=true",
+    "Programas de TV": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/tv.png?raw=true", 
+    "Beisebol": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/baseball.png?raw=true",    
+    "Cricket": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/cricket.png?raw=true",
+    "Athletics": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/Athletics.png?raw=true",
     "Ciclismo": DEFAULT_SPORT_ICON,
-    "Golfe": DEFAULT_SPORT_ICON,
-    "Corrida de Cavalos": DEFAULT_SPORT_ICON,
-    "Rugby Union": DEFAULT_SPORT_ICON,
-    "Hóquei no Gelo": DEFAULT_SPORT_ICON
+    "Golfe": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/golf.png?raw=true",
+    "Corrida de Cavalos": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/horse.png?raw=true",
+    "Rugby Union": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/rugby.png?raw=true",
+    "Hóquei no Gelo": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/hockey.png?raw=true",
+    "Water Sports": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/water.png?raw=true",
+    "Water polo": "https://github.com/raphaelfuchter/StepDaddyLiveHD-Lives/blob/main/Logos/water.png?raw=true",
 }
 SPORT_TRANSLATION_MAP = {
     "Soccer": "Futebol",
