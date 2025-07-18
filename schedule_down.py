@@ -23,6 +23,9 @@ EPG_EVENT_DURATION_HOURS = 2
 GROUP_SORT_ORDER = ["Futebol", "Basquete", "Futebol Americano", "Automobilismo", "Hóquei no Gelo", "Programas de TV", "Beisebol"]
 EPG_PAST_EVENT_CUTOFF_HOURS = 1
 
+# Fuso horário para o EPG (UTC-3 para Horário de Brasília)
+EPG_LOCAL_TIMEZONE_OFFSET_HOURS = -3  
+
 # Repositório de logos do GitHub
 GITHUB_API_URL = "https://api.github.com/repos/tv-logo/tv-logos/contents/countries"
 
@@ -294,9 +297,12 @@ def generate_m3u8_content(stream_list: list, base_url: str, logo_cache: dict) ->
     return "\n".join(m3u8_lines)
 
 def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
-    """Gera um EPG de dia inteiro para cada evento com logos dinâmicos."""
+    """Gera um EPG de dia inteiro para cada evento com logos e fuso horário local corrigido."""
     if not stream_list: return ""
-    print(f"Formatando {len(stream_list)} streams para o arquivo EPG XML...")
+    print(f"Formatando {len(stream_list)} streams para o arquivo EPG XML com fuso horário corrigido...")
+    
+    # Define o fuso horário local a partir da configuração
+    local_tz = timezone(timedelta(hours=EPG_LOCAL_TIMEZONE_OFFSET_HOURS))
     
     xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv>']
     
@@ -328,14 +334,19 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
             safe_channel_name = html.escape(stream['source_name'])
             safe_sport_name = html.escape(stream['sport'])
 
-            # --- ALTERAÇÃO INÍCIO: Lógica unificada para todos os dias ---
-            # Define o início e o fim do dia do evento (00:00 às 23:59:59)
-            event_day_start_utc = start_dt_utc.replace(hour=0, minute=0, second=0, microsecond=0)
-            event_day_end_utc = event_day_start_utc + timedelta(days=1)
+            # --- INÍCIO DA LÓGICA CORRIGIDA ---
+            # Converte o início do evento para o fuso horário local para encontrar o dia correto
+            start_dt_local = start_dt_utc.astimezone(local_tz)
 
-            # Bloco 1: "Evento não iniciado" (do início do dia até o começo do evento)
-            if start_dt_utc > event_day_start_utc:
-                start_str_before = event_day_start_utc.strftime('%Y%m%d%H%M%S') + " +0000"
+            # Define o início (00:00) e o fim (dia seguinte 00:00) do dia NO FUSO HORÁRIO LOCAL
+            local_day_start = start_dt_local.replace(hour=0, minute=0, second=0, microsecond=0)
+            local_day_end = local_day_start + timedelta(days=1)
+
+            # Bloco 1: "Evento não iniciado"
+            # O XMLTV requer o formato UTC (+0000), então reconvertemos as bordas do dia para UTC
+            if start_dt_utc > local_day_start.astimezone(timezone.utc):
+                local_day_start = local_day_start - timedelta(days=1)
+                start_str_before = local_day_start.astimezone(timezone.utc).strftime('%Y%m%d%H%M%S') + " +0000"
                 stop_str_before = start_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
 
                 xml_lines.append(f'  <programme start="{start_str_before}" stop="{stop_str_before}" channel="{unique_id}">')
@@ -352,16 +363,19 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
             xml_lines.append(f'    <category lang="pt">{safe_sport_name}</category>')
             xml_lines.append('  </programme>')
 
-            # Bloco 3: "Evento finalizado" (do fim do evento até o fim do dia)
-            if end_dt_utc < event_day_end_utc:
+            # Bloco 3: "Evento finalizado"
+            # O XMLTV requer o formato UTC (+0000), então reconvertemos as bordas do dia para UTC
+            if end_dt_utc < local_day_end.astimezone(timezone.utc):
                 start_str_after = end_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
-                stop_str_after = event_day_end_utc.strftime('%Y%m%d%H%M%S') + " +0000"
+                
+                local_day_end = local_day_end + timedelta(days=1)
+                stop_str_after = local_day_end.astimezone(timezone.utc).strftime('%Y%m%d%H%M%S') + " +0000"
                 
                 xml_lines.append(f'  <programme start="{start_str_after}" stop="{stop_str_after}" channel="{unique_id}">')
                 xml_lines.append(f'    <title lang="pt">Evento finalizado</title>')
                 xml_lines.append(f'    <desc lang="pt">A programação ao vivo deste evento foi encerrada.</desc>')
                 xml_lines.append('  </programme>')
-            # --- ALTERAÇÃO FIM ---
+            # --- FIM DA LÓGICA CORRIGIDA ---
             
         except (ValueError, TypeError):
             continue
