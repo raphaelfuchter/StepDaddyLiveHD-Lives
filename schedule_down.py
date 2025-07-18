@@ -298,10 +298,6 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
     if not stream_list: return ""
     print(f"Formatando {len(stream_list)} streams para o arquivo EPG XML...")
     
-    now_utc = datetime.now(timezone.utc)
-    today_start_utc = now_utc.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(hours=3) - timedelta(days=1)
-    today_end_utc = today_start_utc + timedelta(days=3)
-    
     xml_lines = ['<?xml version="1.0" encoding="UTF-8"?>', '<tv>']
     
     # 1. Cria um <channel> para CADA stream, usando um ID único
@@ -310,7 +306,6 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
         channel_display_name = stream.get('source_name', 'Canal')
         sport_group = stream.get("sport")
 
-        # --- ALTERAÇÃO 3: Usa a constante DEFAULT_SPORT_ICON como fallback ---
         # Encontra o melhor logo dinamicamente
         sport_icon_fallback = SPORT_ICON_MAP.get(sport_group, DEFAULT_SPORT_ICON)
         logo_url = find_best_logo_url(channel_display_name, logo_cache, sport_icon_fallback)
@@ -333,26 +328,24 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
             safe_channel_name = html.escape(stream['source_name'])
             safe_sport_name = html.escape(stream['sport'])
 
-            # Se o evento não for para hoje, apenas adiciona o evento real
-            if start_dt_utc.date() != now_utc.date():
-                start_str = start_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
-                end_str = end_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
-                xml_lines.append(f'  <programme start="{start_str}" stop="{end_str}" channel="{unique_id}">')
-                xml_lines.append(f'    <title lang="pt">{safe_channel_name}</title>')
-                xml_lines.append(f'    <desc lang="pt">{safe_event_name}</desc>')
-                xml_lines.append(f'    <category lang="pt">{safe_sport_name}</category>')
-                xml_lines.append('  </programme>')
-                continue
+            # --- ALTERAÇÃO INÍCIO: Lógica unificada para todos os dias ---
+            # Define o início e o fim do dia do evento (00:00 às 23:59:59)
+            event_day_start_utc = start_dt_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            event_day_end_utc = event_day_start_utc + timedelta(days=1)
 
-            # Se for para hoje, cria a grade completa
-            if start_dt_utc > today_start_utc:
-                start_str_before = today_start_utc.strftime('%Y%m%d%H%M%S') + " +0000"
+            # Bloco 1: "Evento não iniciado" (do início do dia até o começo do evento)
+            if start_dt_utc > event_day_start_utc:
+                start_str_before = event_day_start_utc.strftime('%Y%m%d%H%M%S') + " +0000"
                 stop_str_before = start_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
+                
+                start_str_before = stop_str_before - timedelta(days=2)
+                
                 xml_lines.append(f'  <programme start="{start_str_before}" stop="{stop_str_before}" channel="{unique_id}">')
                 xml_lines.append(f'    <title lang="pt">Evento não iniciado</title>')
                 xml_lines.append(f'    <desc lang="pt">Aguardando o início do evento programado.</desc>')
                 xml_lines.append('  </programme>')
 
+            # Bloco 2: O evento real
             start_str_real = start_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
             end_str_real = end_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
             xml_lines.append(f'  <programme start="{start_str_real}" stop="{end_str_real}" channel="{unique_id}">')
@@ -361,20 +354,24 @@ def generate_xmltv_epg(stream_list: list, logo_cache: dict) -> str:
             xml_lines.append(f'    <category lang="pt">{safe_sport_name}</category>')
             xml_lines.append('  </programme>')
 
-            if end_dt_utc < today_end_utc:
+            # Bloco 3: "Evento finalizado" (do fim do evento até o fim do dia)
+            if end_dt_utc < event_day_end_utc:
                 start_str_after = end_dt_utc.strftime('%Y%m%d%H%M%S') + " +0000"
-                stop_str_after = today_end_utc.strftime('%Y%m%d%H%M%S') + " +0000"
+                stop_str_after = event_day_end_utc.strftime('%Y%m%d%H%M%S') + " +0000"
+                
+                stop_str_after = stop_str_after + timedelta(days=3)
+                
                 xml_lines.append(f'  <programme start="{start_str_after}" stop="{stop_str_after}" channel="{unique_id}">')
                 xml_lines.append(f'    <title lang="pt">Evento finalizado</title>')
                 xml_lines.append(f'    <desc lang="pt">A programação ao vivo deste evento foi encerrada.</desc>')
                 xml_lines.append('  </programme>')
+            # --- ALTERAÇÃO FIM ---
             
         except (ValueError, TypeError):
             continue
             
     xml_lines.append('</tv>')
     return "\n".join(xml_lines)
-
 
 def main():
     """Função principal que usa Selenium para navegação complexa."""
